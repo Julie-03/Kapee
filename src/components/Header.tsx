@@ -50,9 +50,11 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
           </div>
 
           <div className="flex items-center space-x-4">
-            <button className="bg-white shadow hidden sm:flex items-center space-x-1 text-gray-700 hover:text-gray-900">
+            <Link to="/login">
+            <button className="bg-white shadow hidden sm:flex items-center space-x-1 text-gray-700 hover:text-gray-900">  
               <span className="text-sm">Account</span>
             </button>
+            </Link>
 
             <button className="bg-white shadow hidden sm:flex items-center space-x-1 text-gray-700 hover:text-gray-900">
               <span></span>

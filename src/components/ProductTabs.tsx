@@ -40,27 +40,27 @@ const ProductSection: React.FC<ProductSectionProps> = ({ title, products }) => {
 
 const ProductTabs: React.FC = () => {
   const featured: Product[] = [
-    { id: "1", name: "Apple AirPods with Wireless …", price: "$85.00", image: "/assets/airpods.png" },
-    { id: "2", name: "JBL Wireless Bluetooth Speaker", price: "$96.00", image: "/assets/speaker.png" },
-    { id: "3", name: "JBL On-Ear Headphones", price: "$124.00", image: "/assets/headphones.png" },
+    { id: "1", name: "Apple AirPods with Wireless …", price: "$85.00", image: "/src/assets/airpods.jpg" },
+    { id: "2", name: "JBL Wireless Bluetooth Speaker", price: "$96.00", image: "/src/assets/speaker.jpg" },
+    { id: "3", name: "JBL On-Ear Headphones", price: "$124.00", image: "/src//assets/headphones.jpg" },
   ];
 
   const recent: Product[] = [
-    { id: "4", name: "Apple iPhone 11 Pro Max 256GB", price: "$199.00", oldPrice: "$254.00", image: "/assets/iphone.png" },
-    { id: "5", name: "Apple AirPods with Wireless …", price: "$85.00", image: "/assets/airpods.png" },
-    { id: "6", name: "Apple Watch Series 5", price: "$499.00 - $599.00", image: "/assets/watch.png" },
+    { id: "4", name: "Apple iPhone 11 Pro Max 256GB", price: "$199.00", oldPrice: "$254.00", image: "/src/assets/iphone.jpg" },
+    { id: "5", name: "Apple AirPods with Wireless …", price: "$85.00", image: "/src/assets/airpods.jpg" },
+    { id: "6", name: "Apple Watch Series 5", price: "$499.00 - $599.00", image: "/src/assets/watch.jpg" },
   ];
 
   const onSale: Product[] = [
-    { id: "7", name: "Apple iPhone 11 Pro Max 256GB", price: "$199.00", oldPrice: "$254.00", image: "/assets/iphone.png" },
-    { id: "8", name: "Apple Watch Series 5", price: "$499.00 - $599.00", image: "/assets/watch.png" },
-    { id: "9", name: "Samsung Gear 360 Camera", price: "$29.00", oldPrice: "$48.00", image: "/assets/camera.png" },
+    { id: "7", name: "Apple iPhone 11 Pro Max 256GB", price: "$199.00", oldPrice: "$254.00", image: "/src/assets/iphone.jpg" },
+    { id: "8", name: "Apple Watch Series 5", price: "$499.00 - $599.00", image: "/src/assets/watch.jpg" },
+    { id: "9", name: "Samsung Gear 360 Camera", price: "$29.00", oldPrice: "$48.00", image: "/src/assets/camera.jpg" },
   ];
 
   const topRated: Product[] = [
-    { id: "10", name: "Samsung Virtual Reality Headset", price: "$18.00", image: "/assets/vr.png" },
-    { id: "11", name: "Microsoft Xbox One Wireless …", price: "$25.00", oldPrice: "$45.00", image: "/assets/xbox.png" },
-    { id: "12", name: "Apple Watch Series 5 Black M…", price: "$599.00", image: "/assets/watch.png" },
+    { id: "10", name: "Samsung Virtual Reality Headset", price: "$18.00", image: "/src/assets/vr.jpg" },
+    { id: "11", name: "Microsoft Xbox One Wireless …", price: "$25.00", oldPrice: "$45.00", image: "/src/assets/xbox.jpg" },
+    { id: "12", name: "Apple Watch Series 5 Black M…", price: "$599.00", image: "/src/assets/watch.jpg" },
   ];
 
   return (

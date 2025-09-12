@@ -5,6 +5,8 @@ import Layout from './components/layout';
 import HomePage from './pages/HomePage';
 import CategoryPage from './pages/CategoryPage';
 import './App.css';
+import LoginPage from './components/login';
+import SignupPage from './components/signup'; 
 
 function App() {
   return (
@@ -43,6 +45,9 @@ function App() {
               }
             />
           </Route>
+          <Route path='/login' element={<LoginPage />} />
+          <Route path='/signup' element={<SignupPage />} />
+
         </Routes>
       </Router>
     </div>

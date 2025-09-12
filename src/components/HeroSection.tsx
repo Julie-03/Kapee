@@ -49,7 +49,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ banner, onShopNow }) => {
                     <div className="flex-1 flex justify-center">
                         <div className="relative">
                             <img
-                                src={banner.productImage}
+                                src="/src/assets/headphones.jpg"
                                 alt={banner.title}
                                 className="w-96 h-80 object-contain"
                             />
