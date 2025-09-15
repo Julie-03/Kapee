@@ -1,9 +1,10 @@
 // src/components/Layout.tsx
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import { navigationItems } from '../data/sampleData';
+
 
 const Layout: React.FC = () => {
   const [cartItems, setCartItems] = useState<number[]>([]);
@@ -52,11 +53,12 @@ const Layout: React.FC = () => {
                 <div>
                   <h4 className="font-bold mb-4">Quick Links</h4>
                   <ul className="space-y-2 text-sm">
-                    <li><a href="#" className="text-gray-400 hover:text-white">About Us</a></li>
-                    <li><a href="#" className="text-gray-400 hover:text-white">Contact</a></li>
-                    <li><a href="#" className="text-gray-400 hover:text-white">FAQ</a></li>
-                    <li><a href="#" className="text-gray-400 hover:text-white">Shipping</a></li>
-                  </ul>
+  <li><Link to="/about" className="text-gray-400 hover:text-white">About Us</Link></li>
+  <li><Link to="/contact" className="text-gray-400 hover:text-white">Contact</Link></li>
+  <li><Link to="/faq" className="text-gray-400 hover:text-white">FAQ</Link></li>
+  <li><Link to="/shipping" className="text-gray-400 hover:text-white">Shipping</Link></li>
+</ul>
+
                 </div>
 
                 <div>
