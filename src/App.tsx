@@ -11,10 +11,11 @@ import ContactPage from './components/Contact';
 
 // Dashboard
 import Dashboard from './dashboardComponents/Dashboard';
-import Orders from './dashboardComponents/Orders';
-import Products from './dashboardComponents/Products';
-import Customers from './dashboardComponents/Customers';
-import Reports from './dashboardComponents/Reports';
+import UserProfilePage from './dashboardComponents/UserProfilePage';
+import Sales from './dashboardComponents/Sales';
+import Tasks from './dashboardComponents/Tasks';
+import PieChart from './dashboardComponents/PieChart';
+import SideBar from './dashboardComponents/sideBar';
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
               }
             />
           </Route>
+          <Route path="/Sidebar" element={<SideBar  />} />
 
           {/* Auth pages (outside Layout) */}
           <Route path="/login" element={<LoginPage />} />
@@ -52,10 +54,10 @@ function App() {
           {/* Admin dashboard (nested) */}
           <Route path="/dashboard" element={<Dashboard />}>
             <Route index element={<h2>Welcome to Kapee Admin</h2>} />
-            <Route path="orders" element={<Orders />} />
-            <Route path="products" element={<Products />} />
-            <Route path="customers" element={<Customers />} />
-            <Route path="reports" element={<Reports />} />
+            <Route path="orders" element={<UserProfilePage />} />
+            <Route path="products" element={<Sales />} />
+            <Route path="customers" element={<Tasks />} />
+            <Route path="reports" element={<PieChart />} />
           </Route>
         </Routes>
       </Router>

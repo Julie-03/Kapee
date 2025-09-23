@@ -14,17 +14,17 @@ function ContactPage() {
             </label>
             <input
               type="text"
-              className="w-full border border-gray-300 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none"
+              className=" bg-white w-full border border-gray-300 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none"
               placeholder="Your name"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className=" bg-white block text-sm font-medium text-gray-700">
               Email
             </label>
             <input
               type="email"
-              className="w-full border border-gray-300 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none"
+              className=" bg-white w-full border border-gray-300 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none"
               placeholder="you@example.com"
             />
           </div>
@@ -34,7 +34,7 @@ function ContactPage() {
             </label>
             <textarea
               rows={5}
-              className="w-full border border-gray-300 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none"
+              className=" bg-white w-full border border-gray-300 rounded-lg p-3 mt-1 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none"
               placeholder="Write your message..."
             />
           </div>
