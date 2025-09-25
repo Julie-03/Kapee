@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { Notify } from "notiflix";
 import { X, User, Lock } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext'; // Import useAuth
 
 interface FormData {
   email: string;
@@ -14,46 +15,62 @@ interface FormData {
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onOpenRegister?: () => void; // Add this prop
+  onOpenRegister?: () => void;
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onOpenRegister }) => {
   const navigate = useNavigate();
   const { register, handleSubmit, reset } = useForm<FormData>();
+  const { login } = useAuth(); // Get login function from auth context
 
   const onLogin = async (data: FormData) => {
     try {
-      // Fixed: Changed endpoint to match your backend route
+      console.log('🔍 Login attempt for:', data.email);
+      
       const res = await axios.post(
-        "http://localhost:7000/api_v1/user/login", // Changed from /userLogin to /login
+        "http://localhost:7000/api_v1/user/login",
         data,
         { headers: { "Content-Type": "application/json" } }
       );
 
-      console.log("Login response:", res.data); // Debug log
+      console.log("✅ Login response:", res.data);
 
-      // Fixed: Match the actual response structure from your backend
-      const userData = res?.data?.user; // Changed from existingUser to user
-      const token = res?.data?.token; // Get token from the correct location
+      const userData = res?.data?.user;
+      const token = res?.data?.token;
 
       if (!userData || !token) {
-        console.log("Missing user data or token");
+        console.log("❌ Missing user data or token");
         return Notify.failure("Login failed - Invalid response");
       }
 
-      // Save user data in localStorage
+      console.log('🔍 Token received:', token ? `${token.substring(0, 30)}...` : 'None');
+
+      // ✅ Create consistent user object for AuthContext
+      const authUser = {
+        _id: userData.id,
+        email: userData.email,
+        role: userData.userRole || 'user'
+      };
+
+      // ✅ Use AuthContext login function (this will store as 'accessToken')
+      login(token, authUser);
+
+      // ✅ Keep backward compatibility - but make sure keys match AuthContext
       localStorage.setItem(
         "userKey",
         JSON.stringify({
-          _id: userData.id, // Your backend returns 'id', not '_id'
+          _id: userData.id,
           username: userData.username,
           email: userData.email,
-          userRole: userData.userRole, // Make sure this exists in your user model
+          userRole: userData.userRole,
         })
       );
-      localStorage.setItem("accessToken", token); // Use token from response
+      
+      // Note: AuthContext.login() already stores this as 'accessToken'
+      // So we don't need to duplicate it here
 
-      console.log("User role:", userData.userRole); // Debug log
+      console.log("✅ User role:", userData.userRole);
+      console.log("✅ Auth state should now be set");
 
       // Close modal and redirect based on user role
       onClose();
@@ -62,14 +79,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onOpenRegister
         Notify.success("Welcome Admin! You are now in Admin Access Level");
       } else {
         navigate("/");
-        Notify.info("You are not admin. User Access Level granted.");
+        Notify.info("Login successful! Welcome back.");
       }
 
       reset();
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("❌ Login error:", error);
       
-      // Better error handling
       const errorMessage = error?.response?.data?.message || "Login Failed";
       Notify.failure(errorMessage);
     }
@@ -77,9 +93,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onOpenRegister
 
   const handleRegisterClick = () => {
     if (onOpenRegister) {
-      onOpenRegister(); // Use the modal switching function instead of navigation
+      onOpenRegister();
     } else {
-      // Fallback to navigation if prop not provided
       onClose();
       navigate("/signup");
     }

@@ -1,15 +1,31 @@
 // src/components/Layout.tsx
-import React, { useState } from 'react';
+import React, { useContext } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import Header from './Header';
 import { navigationItems } from '../data/sampleData';
+import { CartContext } from './CartContext';
 
 const Layout: React.FC = () => {
-  const [cartItems, setCartItems] = useState<number[]>([]);
+  // ✅ Use CartContext instead of local state
+  const cartContext = useContext(CartContext);
 
   const handleAddToCart = (productId: number) => {
-    setCartItems(prev => [...prev, productId]);
-    console.log(`Product ${productId} added to cart`);
+    if (cartContext?.addItem) {
+      // You'll need to get the full product data somehow
+      // For now, I'll create a basic item - you should modify this
+      // to get the actual product data from your products list
+      const cartItem = {
+        id: productId.toString(),
+        title: `Product ${productId}`, // Replace with actual product name
+        price: 29.99, // Replace with actual product price
+        image: '', // Replace with actual product image
+      };
+      
+      cartContext.addItem(cartItem, 1);
+      console.log(`✅ Product ${productId} added to CartContext`);
+    } else {
+      console.log(`❌ CartContext not available for product ${productId}`);
+    }
   };
 
   return (
@@ -17,7 +33,8 @@ const Layout: React.FC = () => {
       {/* Header - Fixed at top */}
       <Header 
         navigationItems={navigationItems}
-        cartItemCount={cartItems.length}
+        // ✅ Get cart count from context instead of local state
+        cartItemCount={cartContext?.getTotalItems() || 0}
       />
 
       {/* Main Content Area - Full width, no sidebar */}

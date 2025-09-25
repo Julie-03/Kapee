@@ -1,14 +1,19 @@
 // src/components/ProductSection.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import ProductCard from './ProductCard';
-import type { ProductSection as ProductSectionType } from '../types/index';
+import Modal from './Modal';
+import ProductDetails from './ProductDetails';
+import type { ProductSection as ProductSectionType, Product } from '../types/index';
 
 interface ProductSectionProps {
     section: ProductSectionType;
-    onAddToCart?: (productId: number) => void;
+    onAddToCart?: (productId: number) => void; // Keep for backwards compatibility but don't use
 }
 
-const ProductSection: React.FC<ProductSectionProps> = ({ section, onAddToCart }) => {
+const ProductSection: React.FC<ProductSectionProps> = ({ section }) => {
+    // ✅ Remove onAddToCart parameter - let ProductCard use CartContext directly
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
     return (
         <section className="py-12 px-4 max-w-7xl mx-auto">
             <div className="text-center mb-8">
@@ -23,7 +28,8 @@ const ProductSection: React.FC<ProductSectionProps> = ({ section, onAddToCart })
                     <ProductCard
                         key={product.id}
                         product={product}
-                        onAddToCart={onAddToCart}
+                        // ✅ Remove onAddToCart prop - let ProductCard use CartContext directly
+                        onSelect={() => setSelectedProduct(product)}
                     />
                 ))}
             </div>
@@ -33,6 +39,12 @@ const ProductSection: React.FC<ProductSectionProps> = ({ section, onAddToCart })
                     View All {section.title}
                 </button>
             </div>
+
+            {selectedProduct && (
+                <Modal onClose={() => setSelectedProduct(null)} ariaLabel="Product Details">
+                    <ProductDetails product={selectedProduct} /> 
+                </Modal>
+            )}
         </section>
     );
 };
