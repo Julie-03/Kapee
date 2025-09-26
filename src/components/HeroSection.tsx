@@ -16,17 +16,15 @@ const HeroSection: React.FC<HeroSectionProps> = ({ banner, onShopNow }) => {
         }
     };
 
-    // Sidebar categories data - you can move this to props or data file
+    // Sidebar categories data 
     const sidebarCategories = [
-        { id: 1, name: "Men's Clothing", hasSubmenu: true },
-        { id: 2, name: "Women's Clothing", hasSubmenu: true },
-        { id: 3, name: "Accessories", hasSubmenu: true },
-        { id: 4, name: "Shoes", hasSubmenu: true },
-        { id: 5, name: "Jewellery", hasSubmenu: true },
-        { id: 6, name: "Bags & Backpacks", hasSubmenu: true },
-        { id: 7, name: "Watches", hasSubmenu: true },
-        { id: 8, name: "Dresses", hasSubmenu: true },
-        { id: 9, name: "Shirts", hasSubmenu: true },
+        { id: 1, name: "Laptops", hasSubmenu: true },
+        { id: 2, name: "Watches", hasSubmenu: true },
+        { id: 3, name: "Phones", hasSubmenu: true },
+        { id: 4, name: "Cameras", hasSubmenu: true },
+        { id: 5, name: "Drones", hasSubmenu: true },
+        { id: 6, name: "Headphones", hasSubmenu: true },
+        { id: 7, name: "Accessories", hasSubmenu: true },
     ];
 
     return (

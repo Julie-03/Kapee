@@ -1,7 +1,9 @@
 // src/types/index.ts
-
+import type { ReactNode } from 'react';
+import CustomerOrderTracking from '../components/CustomerOrderTracking';
 export interface Product {
     id: number;
+    mongoId?: string;
     name: string;
     title: string;
     price: number;

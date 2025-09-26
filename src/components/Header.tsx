@@ -251,12 +251,9 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
         <CartModal onClose={handleCloseCart} />
       )}
       
-      {/* Debug info */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 right-4 bg-black text-white p-2 text-xs rounded z-50">
-          Auth: {isAuthenticated ? `Yes (${user?.email})` : 'No'} | Cart Open: {isCartOpen ? 'Yes' : 'No'}
-        </div>
-      )}
+    
+        
+      
     </>
   );
 };

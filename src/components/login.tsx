@@ -1,11 +1,11 @@
-// src/components/LoginModal.tsx
+// Updated LoginModal.tsx with consistent authentication
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import { Notify } from "notiflix";
 import { X, User, Lock } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext'; // Import useAuth
+import { useAuth } from '../contexts/AuthContext';
 
 interface FormData {
   email: string;
@@ -21,7 +21,7 @@ interface LoginModalProps {
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onOpenRegister }) => {
   const navigate = useNavigate();
   const { register, handleSubmit, reset } = useForm<FormData>();
-  const { login } = useAuth(); // Get login function from auth context
+  const { login } = useAuth();
 
   const onLogin = async (data: FormData) => {
     try {
@@ -43,37 +43,24 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onOpenRegister
         return Notify.failure("Login failed - Invalid response");
       }
 
-      console.log('🔍 Token received:', token ? `${token.substring(0, 30)}...` : 'None');
-
-      // ✅ Create consistent user object for AuthContext
+      // Create consistent user object for AuthContext
       const authUser = {
         _id: userData.id,
         email: userData.email,
-        role: userData.userRole || 'user'
+        role: userData.userRole || 'user',
+        userRole: userData.userRole || 'user',
+        username: userData.username
       };
 
-      // ✅ Use AuthContext login function (this will store as 'accessToken')
+      // Use AuthContext login function (this handles all storage)
       login(token, authUser);
 
-      // ✅ Keep backward compatibility - but make sure keys match AuthContext
-      localStorage.setItem(
-        "userKey",
-        JSON.stringify({
-          _id: userData.id,
-          username: userData.username,
-          email: userData.email,
-          userRole: userData.userRole,
-        })
-      );
-      
-      // Note: AuthContext.login() already stores this as 'accessToken'
-      // So we don't need to duplicate it here
-
       console.log("✅ User role:", userData.userRole);
-      console.log("✅ Auth state should now be set");
+      console.log("✅ Authentication complete");
 
       // Close modal and redirect based on user role
       onClose();
+      
       if (userData.userRole === "admin") {
         navigate("/dashboard");
         Notify.success("Welcome Admin! You are now in Admin Access Level");

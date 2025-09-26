@@ -1,7 +1,7 @@
 // src/components/ProductCard.tsx
 import React, { useContext } from 'react';
 import { CartContext } from './CartContext';
-import { useAuth } from '../contexts/AuthContext'; // Import auth context
+import { useAuth } from '../contexts/AuthContext';
 import apiService from './services/apiService';
 import type { Product } from '../types/index';
 
@@ -13,47 +13,53 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onSelect }) => {
     const cartContext = useContext(CartContext);
-    const { isAuthenticated, user } = useAuth(); // Get auth state
+    const { isAuthenticated, user } = useAuth();
 
-    // Simple notification function - replace with your preferred notification library
+    // Simple notification function
     const notify = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+        console.log(`${type.toUpperCase()}: ${message}`);
         // You can replace this with react-toastify, react-hot-toast, or any notification library
-        alert(message); // Simple fallback - replace with better notification
+        alert(message);
     };
 
     const handleAddToCart = async (e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent triggering onSelect
+        e.stopPropagation();
         
-        // Check if user is authenticated
         if (!isAuthenticated) {
             notify('Please log in to add items to cart', 'info');
-            return; // Don't redirect, just show notification
+            return;
         }
 
         const button = e.target as HTMLButtonElement;
-        const originalText = button.textContent;
+        const originalText = button.textContent || 'Add to Cart';
         
         try {
-            // Disable button during API call
             button.disabled = true;
             button.textContent = 'Adding...';
             
             if (onAddToCart) {
-                // Use the callback if provided
+                // Use the callback if provided (for backward compatibility)
                 onAddToCart(product.id);
             } else {
-                // Use API service to add to backend cart
-                await apiService.addToCart(product.id.toString(), 1);
+                // Use mongoId for backend operations, fallback to id.toString()
+                const productIdForBackend = product.mongoId || product.id.toString();
                 
-                // Also update local cart context if available
+                console.log(`Adding product to cart:`, {
+                    productId: productIdForBackend,
+                    productName: product.name,
+                    mongoId: product.mongoId
+                });
+                
+                await apiService.addToCart(productIdForBackend, 1);
+                
+                // Update local cart context with display data
                 if (cartContext?.addItem) {
                     const cartItem = {
-                        id: product.id.toString(),
+                        id: productIdForBackend,
                         title: product.name,
                         price: product.price,
                         image: product.image,
                     };
-                    
                     cartContext.addItem(cartItem, 1);
                 }
                 
@@ -84,13 +90,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onSelec
             }, 2000);
             
             // Handle specific error cases
-            if (error instanceof Error && error.message.includes('Authentication required')) {
-                notify('Your session has expired. Please log in again.', 'error');
-                window.location.href = '/login';
-            } else if (error instanceof Error && error.message.includes('already in cart')) {
-                notify('This item is already in your cart. You can update the quantity from your cart.', 'info');
+            if (error instanceof Error) {
+                if (error.message.includes('Authentication required')) {
+                    notify('Your session has expired. Please log in again.', 'error');
+                    // Optionally redirect to login
+                    // window.location.href = '/login';
+                } else if (error.message.includes('already in cart')) {
+                    notify('This item is already in your cart. You can update the quantity from your cart.', 'info');
+                } else {
+                    notify('Failed to add item to cart. Please try again.', 'error');
+                }
             } else {
-                notify('Failed to add item to cart. Please try again.', 'error');
+                notify('An unexpected error occurred. Please try again.', 'error');
             }
         }
     };
@@ -106,9 +117,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onSelec
                 onClick={onSelect} 
             >
                 <img 
-                    src={product.image} 
+                    src={product.image || '/placeholder-image.jpg'} 
                     alt={product.name}
                     className="w-full h-48 object-cover bg-gray-50 rounded hover:scale-105 transition-transform duration-200"
+                    onError={(e) => {
+                        // Fallback image if the image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/placeholder-image.jpg';
+                    }}
                 />
                 
                 {product.isOnSale && discountPercentage > 0 && (
@@ -117,7 +133,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onSelec
                     </span>
                 )}
 
-                {!product.inStock && (
+                {product.inStock === false && (
                     <div className="absolute inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center rounded">
                         <span className="text-white font-bold">Out of Stock</span>
                     </div>
@@ -126,7 +142,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onSelec
 
             <div className="space-y-2">
                 <h3 
-                    className="font-semibold text-gray-800 h-12 overflow-hidden cursor-pointer hover:text-yellow-600 transition-colors"
+                    className="font-semibold text-gray-800 h-12 overflow-hidden cursor-pointer hover:text-yellow-600 transition-colors line-clamp-2"
                     onClick={onSelect}
                     title={product.name}
                 >
@@ -162,27 +178,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onSelec
 
                 <button
                     onClick={handleAddToCart}
-                    disabled={!product.inStock}
+                    disabled={product.inStock === false}
                     className={`w-full py-2 px-4 rounded font-medium transition-all duration-200 ${
-                        product.inStock
+                        product.inStock !== false
                             ? 'bg-yellow-500 text-white hover:bg-yellow-600 active:bg-yellow-700 hover:shadow-md'
                             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                 >
-                    {!product.inStock 
+                    {product.inStock === false 
                         ? 'Out of Stock' 
-                        : 'Add to Cart'  // Always show "Add to Cart" regardless of auth status
+                        : 'Add to Cart'
                     }
                 </button>
             </div>
-
-            {/* Debug info - remove in production */}
-            {cartContext && isAuthenticated && (
-                <div className="mt-2 text-xs text-gray-500">
-                    Cart has {cartContext.getTotalItems()} items | User: {user?.email}
-                </div>
-            )}
-        </div>
+    </div>
     );
 };
 

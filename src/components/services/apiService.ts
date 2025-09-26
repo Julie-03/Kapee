@@ -1,115 +1,120 @@
 // src/services/apiService.ts
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:7000";
 
-// Updated to match your existing backend routes
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-                     (window as any).REACT_APP_API_URL || 
-                     'http://localhost:7000';
-
-interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  message?: string;
+export interface BackendProduct {
+  _id: string;
+  name: string;
+  price: number;
+  description: string;
+  imageUrl?: string;
+  category?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-class ApiService {
-  private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('accessToken');
-    console.log('🔍 Token found:', token ? 'Yes' : 'No');
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-    };
-  }
+// Product service
+export const productService = {
+  // Fetch all products
+  getAllProducts: async (): Promise<BackendProduct[]> => {
+    try {
+      console.log("Fetching products from:", `${API_BASE_URL}/products`);
 
-  private async handleResponse<T>(response: Response): Promise<T> {
-    console.log('🔍 Response status:', response.status);
-    console.log('🔍 Response URL:', response.url);
-    
-    if (response.status === 401) {
-      // Token expired or invalid, redirect to login
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('userKey');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-      throw new Error('Authentication required');
+      const response = await fetch(`${API_BASE_URL}/products`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Raw API response:", data);
+
+      if (data.products && Array.isArray(data.products)) {
+        return data.products;
+      } else if (Array.isArray(data)) {
+        return data;
+      } else {
+        console.warn("Unexpected API response structure:", data);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      throw error;
+    }
+  },
+
+  // Create a new product
+  createProduct: async (
+    productData: Omit<BackendProduct, "_id" | "createdAt" | "updatedAt">
+  ): Promise<BackendProduct> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(productData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status}, message: ${errorText}`
+        );
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error creating product:", error);
+      throw error;
+    }
+  },
+
+  // Delete a product
+  deleteProduct: async (productId: string): Promise<void> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      throw error;
+    }
+  },
+};
+
+// Main API service (for cart and other operations)
+const apiService = {
+  addToCart: async (productId: string, quantity: number) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Authentication required");
     }
 
+    // 👇 if your backend also doesn’t use /api_v1 for cart, update here too
+    const response = await fetch(`${API_BASE_URL}/cart/add`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ productId, quantity }),
+    });
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('🔍 Error response:', errorData);
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      if (response.status === 401) {
+        throw new Error("Authentication required");
+      }
+      const errorText = await response.text();
+      throw new Error(`Failed to add to cart: ${errorText}`);
     }
 
     return response.json();
-  }
+  },
+};
 
-  // Test backend connection
-  async testConnection(): Promise<void> {
-    try {
-      console.log('🔍 Testing connection to:', `${API_BASE_URL}/cart/test`);
-      const response = await fetch(`${API_BASE_URL}/cart/test`);
-      const data = await response.json();
-      console.log('✅ Backend test successful:', data);
-    } catch (error) {
-      console.error('❌ Backend test failed:', error);
-    }
-  }
-
-  // Cart API methods
-  async addToCart(productId: string, quantity: number = 1): Promise<ApiResponse> {
-    const url = `${API_BASE_URL}/cart/add`;
-    const headers = this.getAuthHeaders();
-    const body = JSON.stringify({ productId, quantity });
-    
-    console.log('🔍 Making request to:', url);
-    console.log('🔍 Headers:', headers);
-    console.log('🔍 Body:', body);
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body,
-    });
-
-    return this.handleResponse<ApiResponse>(response);
-  }
-
-  async getCartItems(): Promise<ApiResponse> {
-    const response = await fetch(`${API_BASE_URL}/cart`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse<ApiResponse>(response);
-  }
-
-  async updateCartItem(productId: string, quantity: number): Promise<ApiResponse> {
-    const response = await fetch(`${API_BASE_URL}/cart/update/${productId}`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify({ quantity }),
-    });
-
-    return this.handleResponse<ApiResponse>(response);
-  }
-
-  async removeCartItem(productId: string): Promise<ApiResponse> {
-    const response = await fetch(`${API_BASE_URL}/cart/remove/${productId}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse<ApiResponse>(response);
-  }
-
-  async getCartItemById(id: string): Promise<ApiResponse> {
-    const response = await fetch(`${API_BASE_URL}/cart/${id}`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-
-    return this.handleResponse<ApiResponse>(response);
-  }
-}
-
-export default new ApiService();
+export default apiService;

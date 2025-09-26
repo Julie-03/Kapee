@@ -1,96 +1,133 @@
-// src/contexts/AuthContext.tsx
+// AuthContext.tsx - Updated logout function
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
 interface User {
   _id: string;
   email: string;
-  role: string;
+  role?: string;
+  userRole?: string;
+  username?: string;
 }
 
 interface AuthContextType {
+ isAuthenticated: boolean;
   user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
+  login: (token: string, userData: User) => void;
   logout: () => void;
   loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Check for existing authentication on app start
   useEffect(() => {
-    // ✅ Fixed: Use same key as LoginModal and ApiService
-    const storedToken = localStorage.getItem('accessToken'); // Changed from 'authToken'
-    const storedUser = localStorage.getItem('user');
-    
-    console.log('🔍 AuthContext loading - Token found:', storedToken ? 'Yes' : 'No');
-    console.log('🔍 AuthContext loading - User found:', storedUser ? 'Yes' : 'No');
-    
-    if (storedToken && storedUser) {
+    const checkAuth = () => {
       try {
-        const userData = JSON.parse(storedUser);
-        setToken(storedToken);
-        setUser(userData);
-        console.log('✅ AuthContext: Restored auth state for user:', userData.email);
+        const token = localStorage.getItem('accessToken');
+        const userKey = localStorage.getItem('userKey');
+        
+        console.log('🔍 AuthContext: Checking existing auth...');
+        console.log('Token exists:', !!token);
+        console.log('UserKey exists:', !!userKey);
+        
+        if (token && userKey) {
+          const userData = JSON.parse(userKey);
+          console.log('✅ AuthContext: Restoring user session:', userData.email);
+          
+          setUser({
+            _id: userData._id || userData.id,
+            email: userData.email,
+            role: userData.userRole || userData.role,
+            userRole: userData.userRole || userData.role,
+            username: userData.username
+          });
+          setIsAuthenticated(true);
+        } else {
+          console.log('❌ AuthContext: No valid session found');
+        }
       } catch (error) {
-        console.log('❌ AuthContext: Invalid stored data, clearing...');
-        // Invalid stored data, clear it
-        localStorage.removeItem('accessToken'); // Changed from 'authToken'
-        localStorage.removeItem('user');
-        localStorage.removeItem('userKey'); // Also clear userKey for consistency
+        console.error('❌ AuthContext: Error checking auth:', error);
+        // Clear corrupted data
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('userKey');
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
-  const login = (authToken: string, userData: User) => {
-    console.log('🔍 AuthContext login called for user:', userData.email);
-    setToken(authToken);
+  const login = (token: string, userData: User) => {
+    console.log('✅ AuthContext: Login called with:', userData.email);
+    
+    // Store token and user data
+    localStorage.setItem('accessToken', token);
+    localStorage.setItem('userKey', JSON.stringify({
+      _id: userData._id,
+      id: userData._id,
+      email: userData.email,
+      username: userData.username,
+      userRole: userData.role || userData.userRole,
+      role: userData.role || userData.userRole
+    }));
+    
     setUser(userData);
+    setIsAuthenticated(true);
     
-    // ✅ Fixed: Use same key as LoginModal and ApiService
-    localStorage.setItem('accessToken', authToken); // Changed from 'authToken'
-    localStorage.setItem('user', JSON.stringify(userData));
-    
-    console.log('✅ AuthContext: Login successful, token stored');
+    console.log('✅ AuthContext: Login complete, isAuthenticated:', true);
   };
 
   const logout = () => {
-    console.log('🔍 AuthContext logout called');
-    setToken(null);
-    setUser(null);
+    console.log('🔄 AuthContext: Logout called');
     
-    // ✅ Clear all related storage keys
-    localStorage.removeItem('accessToken'); // Changed from 'authToken'
+    // Clear all authentication data
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('userKey');
+    
+    // Also clear any other auth-related items that might exist
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
-    localStorage.removeItem('userKey'); // Also clear userKey for consistency
     
-    console.log('✅ AuthContext: Logout successful, storage cleared');
+    // Reset state
+    setUser(null);
+    setIsAuthenticated(false);
+    
+    console.log('✅ AuthContext: Logout complete, all data cleared');
   };
 
   const value: AuthContextType = {
+    isAuthenticated,
     user,
-    token,
-    isAuthenticated: !!token && !!user,
     login,
     logout,
-    loading,
+    loading
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 AuthContext state:', { 
+      isAuthenticated, 
+      userEmail: user?.email,
+      userRole: user?.role || user?.userRole,
+      loading 
+    });
+  }
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
