@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { NavItem } from '../types/index';
-import { useAuth } from '../contexts/AuthContext'; // Import auth context
+import { useAuth } from '../contexts/AuthContext'; 
 import LoginModal from './login';
 import RegistrationModal from './RegisterForm';
 import CartModal from './CartModal';

@@ -309,7 +309,7 @@ const TableListPage = () => {
   // Updated interface to match your MongoDB schema
   interface Product {
     _id?: string;
-    id?: number; // For React keys
+    id?: string | number; 
     name: string;
     price: number;
     description: string;
