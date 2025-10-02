@@ -5,27 +5,47 @@ import Modal from './Modal';
 import ProductDetails from './ProductDetails';
 import { productService } from './services/apiService';
 import type { BackendProduct } from './services/apiService';
+import type { Product } from '../types/index';
 
 interface ProductSectionProps {
   title: string;
-  filter?: (product: BackendProduct) => boolean; // optional filter
+  products?: Product[]; // Accept products from parent
+  filter?: (product: BackendProduct) => boolean;
+  onAddToCart?: (productId: string) => void; // Accept cart handler
 }
 
-const ProductSection: React.FC<ProductSectionProps> = ({ title, filter }) => {
+const ProductSection: React.FC<ProductSectionProps> = ({ 
+  title, 
+  products: externalProducts, 
+  filter,
+  onAddToCart 
+}) => {
   const [products, setProducts] = useState<BackendProduct[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<BackendProduct | null>(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const allProducts = await productService.getAllProducts();
-        setProducts(filter ? allProducts.filter(filter) : allProducts);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-    };
-    fetchProducts();
-  }, [filter]);
+    // Only fetch if products aren't provided externally
+    if (!externalProducts) {
+      const fetchProducts = async () => {
+        try {
+          const allProducts = await productService.getAllProducts();
+          setProducts(filter ? allProducts.filter(filter) : allProducts);
+        } catch (error) {
+          console.error("Error fetching products:", error);
+        }
+      };
+      fetchProducts();
+    }
+  }, [filter, externalProducts]);
+
+  // Use external products if provided, otherwise use fetched products
+  const displayProducts = externalProducts || products;
+
+  const handleAddToCart = (productId: string) => {
+    if (onAddToCart) {
+      onAddToCart(productId);
+    }
+  };
 
   return (
     <section className="py-12 px-4 max-w-7xl mx-auto">
@@ -35,24 +55,29 @@ const ProductSection: React.FC<ProductSectionProps> = ({ title, filter }) => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {products.map((product) => (
-          <ProductCard
-            key={product._id}
-            product={{
-              _id: String(product._id),        
-    mongoId: String(product._id),   
-    name: product.name,
-    title: product.name,           
-    price: product.price,
-    image: product.imageUrl || '',  
-    description: product.description,
-    category: product.category || 'Uncategorized', 
-    inStock: true,
-    isOnSale: false,             
-            }}
-            onSelect={() => setSelectedProduct(product)}
-          />
-        ))}
+        {displayProducts.map((product) => {
+          // Handle both Product and BackendProduct types
+          const productData = 'title' in product ? product : {
+            _id: String(product._id),
+            mongoId: String(product._id),
+            name: product.name,
+            title: product.name,
+            price: product.price,
+            image: product.imageUrl || '',
+            description: product.description,
+            category: product.category || 'Uncategorized',
+            inStock: true,
+            isOnSale: false,
+          };
+
+          return (
+            <ProductCard
+              key={productData._id}
+              product={productData}
+              onSelect={() => setSelectedProduct(product as BackendProduct)}
+            />
+          );
+        })}
       </div>
 
       <div className="text-center mt-8">

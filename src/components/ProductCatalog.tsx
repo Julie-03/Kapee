@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import Modal from './Modal';
 import ProductDetails from './ProductDetails';
-import { productService } from './services/apiService';
+import { productService, type BackendProduct } from './services/apiService';
 import { adaptBackendProduct } from '../utils/productAdapter';
 import type { Product } from '../types/index';
+import Products from '../dashboardComponents/Sales';
 
 const ProductCatalog: React.FC = () => {
     const [products, setProducts] = useState<Product[]>([]);
@@ -115,7 +116,7 @@ const ProductCatalog: React.FC = () => {
                     onClose={() => setSelectedProduct(null)} 
                     ariaLabel="Product Details"
                 >
-                    <ProductDetails product={selectedProduct} />
+                    <ProductDetails product={selectedProduct as BackendProduct} />
                 </Modal>
             )}
         </section>

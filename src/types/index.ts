@@ -40,8 +40,9 @@ export interface HeroBanner {
     badge?: string;
 }
 
-// Props interface for ProductSection component
+// Props interface for ProductSection component - FIXED
 export interface ProductSectionProps {
-    section: ProductSection;
+    title: string;
+    products: Product[];
     onAddToCart: (productId: string) => void;
 }
