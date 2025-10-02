@@ -5,7 +5,7 @@ import ProductCard from '../components/ProductCard';
 import { productSections } from '../data/sampleData';
 
 interface OutletContext {
-  handleAddToCart: (productId: number) => void;
+  handleAddToCart: (productId: string) => void;
 }
 
 const CategoryPage: React.FC = () => {
@@ -82,7 +82,7 @@ const CategoryPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {allProducts.map((product) => (
           <ProductCard
-            key={product.id}
+            key={product._id}
             product={product}
             onAddToCart={handleAddToCart}
           />

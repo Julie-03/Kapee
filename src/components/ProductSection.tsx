@@ -4,7 +4,7 @@ import ProductCard from './ProductCard';
 import Modal from './Modal';
 import ProductDetails from './ProductDetails';
 import { productService } from './services/apiService';
-import type { BackendProduct } from '../types/index';
+import type { BackendProduct } from './services/apiService';
 
 interface ProductSectionProps {
   title: string;
@@ -39,14 +39,16 @@ const ProductSection: React.FC<ProductSectionProps> = ({ title, filter }) => {
           <ProductCard
             key={product._id}
             product={{
-              id: product._id,               // map backend id → frontend id
-              mongoId: product._id,          // keep mongoId for cart
-              name: product.name,
-              price: product.price,
-              image: product.imageUrl,
-              description: product.description,
-              inStock: true,                 // or map backend field if available
-              isOnSale: false,               // or map backend field
+              _id: String(product._id),        
+    mongoId: String(product._id),   
+    name: product.name,
+    title: product.name,           
+    price: product.price,
+    image: product.imageUrl || '',  
+    description: product.description,
+    category: product.category || 'Uncategorized', 
+    inStock: true,
+    isOnSale: false,             
             }}
             onSelect={() => setSelectedProduct(product)}
           />

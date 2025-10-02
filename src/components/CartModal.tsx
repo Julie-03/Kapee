@@ -1,7 +1,9 @@
 // src/components/CartModal.tsx 
 import React, { useContext, useState } from "react";
 import Modal from "./Modal";
-import { CartContext } from "./CartContext";
+import { CartContext } from "../contexts/CartContext";
+import apiService from "./services/apiService";
+import { Notify } from "notiflix/build/notiflix-notify-aio";
 
 interface CartItem {
   id: string;
@@ -25,27 +27,74 @@ export default function CartModal({ onClose }: CartModalProps) {
   
   const items = cartContext?.items || mockCartItems;
   const removeItem = cartContext?.removeItem || (() => console.log('Remove item'));
-  const clearCart = cartContext?.clearCart || (() => console.log('Clear cart'));
+  const clearCart = cartContext?.clearCart || (async () => console.log('Clear cart'));
   const getTotalPrice = cartContext?.getTotalPrice || (() => 0);
 
   const isEmpty = items.length === 0;
 
-  // checkout handler 
+  // Checkout handler with backend integration
   const handleCheckout = async () => {
     setIsProcessing(true);
     
-    // Simulate API call delay
-    setTimeout(() => {
-      console.log('Order placed:', {
+    try {
+      console.log('Creating order:', {
         items: items,
         total: getTotalPrice(),
         timestamp: new Date()
       });
       
-      clearCart();
+      // Call backend to create order (this also clears the cart in backend)
+      const response = await apiService.createOrder();
+      
+      console.log('✅ Order created successfully:', response);
+      
+      // Clear local cart state
+      if (cartContext?.clearCart) {
+        await cartContext.clearCart();
+      }
+      
       setIsProcessing(false);
       setOrderComplete(true);
-    }, 2000);
+      
+      Notify.success('Order placed successfully!', {
+        position: 'right-top',
+        timeout: 3000,
+      });
+    } catch (error) {
+      console.error('Error creating order:', error);
+      setIsProcessing(false);
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Authorization required') || error.message.includes('Authentication required')) {
+          Notify.failure('Your session has expired. Please log in again.', {
+            position: 'right-top',
+            timeout: 3000,
+          });
+        } else if (error.message.includes('Cart is empty')) {
+          Notify.warning('Your cart is empty. Add items before checking out.', {
+            position: 'right-top',
+            timeout: 3000,
+          });
+        } else {
+          Notify.failure(error.message || 'Failed to place order. Please try again.', {
+            position: 'right-top',
+            timeout: 3000,
+          });
+        }
+      } else {
+        Notify.failure('An unexpected error occurred. Please try again.', {
+          position: 'right-top',
+          timeout: 3000,
+        });
+      }
+    }
+  };
+
+  // Handle clear cart button
+  const handleClearCart = async () => {
+    if (window.confirm('Are you sure you want to clear your cart?')) {
+      await clearCart();
+    }
   };
 
   // Show order success
@@ -79,20 +128,20 @@ export default function CartModal({ onClose }: CartModalProps) {
     return (
       <Modal onClose={() => setShowCheckout(false)} ariaLabel="Checkout">
         <div className="max-w-md">
-          <h2 className="text-2xl font-semibold mb-6 text-black bg-white">Checkout</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-gray-900">Checkout</h2>
           
           {/* Order Summary */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold mb-3 bg-white text-black">Order Summary</h3>
+            <h3 className="font-semibold mb-3 text-gray-900">Order Summary</h3>
             <div className="space-y-2">
               {items.map((item) => (
-                <div key={item.id} className="flex justify-between text-sm">
+                <div key={item.id} className="flex justify-between text-sm text-gray-700">
                   <span>{item.title} × {item.qty}</span>
                   <span>${(item.price * item.qty).toFixed(2)}</span>
                 </div>
               ))}
             </div>
-            <div className="border-t mt-3 pt-3 flex justify-between font-bold bg-white text-black">
+            <div className="border-t mt-3 pt-3 flex justify-between font-bold text-gray-900">
               <span>Total:</span>
               <span>${getTotalPrice().toFixed(2)}</span>
             </div>
@@ -103,25 +152,25 @@ export default function CartModal({ onClose }: CartModalProps) {
             <input
               type="email"
               placeholder="Email address"
-              className="w-full p-3 border border-gray-300 rounded-lg  bg-white text-black"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900"
               required
             />
             <input
               type="text"
               placeholder="Full name"
-              className="w-full p-3 border border-gray-300 rounded-lg  bg-white text-black"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900"
               required
             />
             <input
               type="text"
               placeholder="Address"
-              className="w-full p-3 border border-gray-300 rounded-lg  bg-white text-black"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900"
               required
             />
             <input
               type="text"
               placeholder="Card number"
-              className="w-full p-3 border border-gray-300 rounded-lg  bg-white text-black"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900"
               required
             />
           </div>
@@ -129,16 +178,38 @@ export default function CartModal({ onClose }: CartModalProps) {
           <div className="flex gap-3">
             <button
               onClick={() => setShowCheckout(false)}
-              className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium  bg-yellow-500 text-white shadow"
+              className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700"
             >
               Back to Cart
             </button>
             <button
               onClick={handleCheckout}
               disabled={isProcessing}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:bg-gray-400"
+              className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {isProcessing ? 'Processing...' : `Place Order - $${getTotalPrice().toFixed(2)}`}
+              {isProcessing ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle 
+                      className="opacity-25" 
+                      cx="12" 
+                      cy="12" 
+                      r="10" 
+                      stroke="currentColor" 
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path 
+                      className="opacity-75" 
+                      fill="currentColor" 
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                `Place Order - $${getTotalPrice().toFixed(2)}`
+              )}
             </button>
           </div>
         </div>
@@ -201,7 +272,7 @@ export default function CartModal({ onClose }: CartModalProps) {
               </div>
               <button 
                 onClick={() => removeItem(item.id)}
-                className="text-black bg-white px-2 py-1 text-sm border border-gray-300 shadow rounded hover:bg-red-50 transition-colors"
+                className="text-gray-700 bg-white px-3 py-2 text-sm border border-gray-300 rounded hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
               >
                 Remove
               </button>
@@ -218,14 +289,14 @@ export default function CartModal({ onClose }: CartModalProps) {
           
           <div className="flex gap-3 flex-wrap">
             <button 
-              onClick={clearCart}
-              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 bg-white text-black transition-colors"
+              onClick={handleClearCart}
+              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 bg-white text-gray-700 transition-colors"
             >
               Clear Cart
             </button>
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-white text-black border border-gray-300 shadow hover:bg-gray-200 transition-colors"
+              className="px-4 py-2 bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors rounded"
             >
               Continue Shopping
             </button>

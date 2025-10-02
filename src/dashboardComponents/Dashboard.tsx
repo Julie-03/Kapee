@@ -49,7 +49,11 @@ interface ChartProps {
   subtitle: string;
   children: React.ReactNode;
 }             
-const Chart = ({ title, subtitle, children }) => {
+const Chart = ({ title, subtitle, children }: { 
+  title: string; 
+  subtitle: string; 
+  children: React.ReactNode 
+}) => {
   return (
     <div className="bg-white rounded-xl shadow-md border border-gray-50 p-6">
       <div className="mb-6">

@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { NavItem } from '../types/index';
-import { useAuth } from '../contexts/AuthContext'; 
+import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 import LoginModal from './login';
 import RegistrationModal from './RegisterForm';
 import CartModal from './CartModal';
@@ -18,9 +19,11 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // Get authentication state
   const { isAuthenticated, user, logout } = useAuth();
+  const { clearCart } = useCart();
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -32,11 +35,21 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
     setIsLoginModalOpen(true);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-    // You could also show a notification here
-    console.log('User logged out successfully');
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      // DON'T clear cart - let it persist in backend
+      // Just clear local state
+      console.log('⚠️ Logging out - cart will remain in backend');
+    } catch (error) {
+      console.log('⚠️ Logout error:', error);
+    } finally {
+      // Remove the auth token and logout
+      logout();
+      navigate('/');
+      setIsLoggingOut(false);
+      console.log('✅ User logged out successfully');
+    }
   };
 
   const handleCloseLoginModal = () => {
@@ -130,9 +143,10 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
               {isAuthenticated && (
                 <button 
                   onClick={handleLogout}
-                  className="bg-yellow-500 shadow hidden sm:flex items-center space-x-1 text-white hover:bg-yellow-800 px-3 py-2 rounded-lg transition-colors"
+                  disabled={isLoggingOut}
+                  className="bg-yellow-500 shadow hidden sm:flex items-center space-x-1 text-white hover:bg-yellow-600 px-3 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span className="text-sm">Logout</span>
+                  <span className="text-sm">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
                 </button>
               )}
 
@@ -211,9 +225,10 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
                             setIsMobileMenuOpen(false);
                             handleLogout();
                           }}
-                          className="block py-2 text-red-600 hover:text-red-800 transition-colors duration-200"
+                          disabled={isLoggingOut}
+                          className="block py-2 text-red-600 hover:text-red-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Logout
+                          {isLoggingOut ? 'Logging out...' : 'Logout'}
                         </button>
                       </div>
                     </li>
@@ -250,11 +265,7 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
       {isCartOpen && (
         <CartModal onClose={handleCloseCart} />
       )}
-      
-    
-        
-      
-    </>
+   </>
   );
 };
 

@@ -18,7 +18,7 @@ import PieChart from './dashboardComponents/PieChart';
 import SideBar from './dashboardComponents/sideBar';
 
 // ✅ Import both providers
-import { CartProvider } from './components/CartContext';
+import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
 
 function App() {

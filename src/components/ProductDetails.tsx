@@ -1,117 +1,160 @@
 // src/components/ProductDetails.tsx
-import React, { useContext } from "react";
-import { CartContext } from "./CartContext"; // ✅ Make sure path matches
+import React, { useState } from "react";
+import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../contexts/AuthContext";
+import apiService from "./services/apiService";
+import { Notify } from "notiflix/build/notiflix-notify-aio";
+import type { BackendProduct } from "./services/apiService";
 
-// Update interface to match your Product type
-interface Product {
-  id: number; // ✅ Changed from string to number to match your ProductCard
-  name: string; // ✅ Changed from title to name
-  description?: string;
-  price: number;
-  image?: string;
-  rating?: number;
-  originalPrice?: number;
-  isOnSale?: boolean;
-  inStock?: boolean;
-}
+export default function ProductDetails({ product }: { product: BackendProduct }) {
+  const { addItem, getTotalItems } = useCart();
+  const { isAuthenticated } = useAuth();
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-export default function ProductDetails({ product }: { product: Product }) {
-  const cartContext = useContext(CartContext);
+  const addToCart = async (qty = 1) => {
+    // Check authentication first
+    if (!isAuthenticated) {
+      Notify.warning('Please log in to add items to cart', {
+        position: 'right-top',
+        timeout: 3000,
+        showOnlyTheLastOne: true,
+      });
+      return;
+    }
 
-  const addToCart = (qty = 1) => {
-    if (cartContext?.addItem) {
-      // Convert product to cart format
+    setIsAddingToCart(true);
+
+    try {
+      // Use the MongoDB _id for backend operations
+      const productIdForBackend = product._id;
+      
+      console.log(`Adding product to cart:`, {
+        productId: productIdForBackend,
+        productName: product.name,
+        quantity: qty
+      });
+      
+      // Call the backend API
+      await apiService.addToCart(productIdForBackend, qty);
+      
+      // Update local cart context with display data
       const cartItem = {
-        id: product.id.toString(), // Convert to string for cart
-        title: product.name, // Convert name to title for cart
+        id: String(product._id),
+        title: product.name,
         price: product.price,
-        image: product.image,
+        image: product.imageUrl,
       };
       
-      cartContext.addItem(cartItem, qty);
-      console.log(`✅ Added ${product.name} to cart from ProductDetails`);
-    } else {
-      console.log(`❌ Cart context not available for ${product.name}`);
+      addItem(cartItem, qty);
+      console.log(`✅ Added ${product.name} to cart via API`);
+      
+      // Show success notification
+      Notify.success(`${product.name} added to cart!`, {
+        position: 'right-top',
+        timeout: 2000,
+        showOnlyTheLastOne: true,
+      });
+      
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.message.includes('Authentication required') || error.message.includes('Authorization required')) {
+          Notify.failure('Your session has expired. Please log in again.', {
+            position: 'right-top',
+            timeout: 3000,
+          });
+        } else if (error.message.includes('already in cart')) {
+          Notify.info('This item is already in your cart. Update quantity from your cart.', {
+            position: 'right-top',
+            timeout: 3000,
+          });
+        } else {
+          Notify.failure('Failed to add item to cart. Please try again.', {
+            position: 'right-top',
+            timeout: 3000,
+          });
+        }
+      } else {
+        Notify.failure('An unexpected error occurred. Please try again.', {
+          position: 'right-top',
+          timeout: 3000,
+        });
+      }
+    } finally {
+      setIsAddingToCart(false);
     }
   };
 
-  const discountPercentage = product.originalPrice && product.isOnSale
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : 0;
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="flex items-center justify-center">
-        <img
-          src={product.image || "/placeholder.png"}
-          alt={product.name}
-          className="max-h-80 w-full object-cover rounded"
-        />
-      </div>
+    <div className="relative">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex items-center justify-center bg-gray-50 rounded-lg p-4">
+          <img
+            src={product.imageUrl || "https://via.placeholder.com/400x400?text=No+Image"}
+            alt={product.name}
+            className="max-h-96 w-full object-contain rounded"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = "https://via.placeholder.com/400x400?text=Image+Not+Found";
+            }}
+          />
+        </div>
 
-      <div className="flex flex-col">
-        <h2 className="text-2xl font-semibold mb-2">{product.name}</h2>
-        
-        {product.rating && (
-          <div className="flex items-center space-x-1 mb-3">
-            <div className="flex">
-              {[...Array(5)].map((_, i) => (
-                <span 
-                  key={i} 
-                  className={`text-lg ${i < Math.floor(product.rating!) ? 'text-yellow-400' : 'text-gray-300'}`}
-                >
-                  ★
-                </span>
-              ))}
+        <div className="flex flex-col">
+          <h2 className="text-2xl font-semibold mb-2">{product.name}</h2>
+          
+          <p className="text-gray-600 mb-4">{product.description || "No description available."}</p>
+
+          <div className="mb-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-2xl font-bold text-gray-900">
+                ${product.price.toFixed(2)}
+              </span>
             </div>
-            <span className="text-sm text-gray-600">({product.rating})</span>
           </div>
-        )}
 
-        <p className="text-gray-600 mb-4">{product.description || "No description available."}</p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => addToCart(1)}
+              disabled={isAddingToCart}
+              className={`px-6 py-2 rounded font-medium transition-all duration-200 ${
+                isAddingToCart
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-yellow-500 text-white hover:bg-yellow-600 active:bg-yellow-700 hover:shadow-md'
+              }`}
+            >
+              {isAddingToCart ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle 
+                      className="opacity-25" 
+                      cx="12" 
+                      cy="12" 
+                      r="10" 
+                      stroke="currentColor" 
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path 
+                      className="opacity-75" 
+                      fill="currentColor" 
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Adding...
+                </span>
+              ) : (
+                'Add to Cart'
+              )}
+            </button>
+          </div>
 
-        <div className="mb-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-2xl font-bold text-gray-900">
-              ${product.price.toFixed(2)}
-            </span>
-            {product.originalPrice && product.isOnSale && (
-              <span className="text-lg text-gray-500 line-through">
-                ${product.originalPrice.toFixed(2)}
-              </span>
-            )}
-            {product.isOnSale && discountPercentage > 0 && (
-              <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
-                -{discountPercentage}% OFF
-              </span>
-            )}
+          <div className="mt-4 text-sm text-gray-600 bg-gray-50 p-3 rounded">
+            <p>Total items in cart: <span className="font-semibold">{getTotalItems()}</span></p>
           </div>
         </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => addToCart(1)}
-            disabled={product.inStock === false}
-            className={`px-6 py-2 rounded font-medium transition-colors duration-200 ${
-              product.inStock !== false
-                ? 'bg-yellow-500 text-white hover:bg-yellow-600 active:bg-yellow-700'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            {product.inStock !== false ? 'Add to Cart' : 'Out of Stock'}
-          </button>
-        </div>
-
-        {product.inStock === false && (
-          <p className="text-red-500 text-sm mt-2">This item is currently out of stock.</p>
-        )}
-
-        {/* Debug info */}
-        {cartContext && (
-          <div className="mt-4 text-xs text-gray-500">
-            Total items in cart: {cartContext.getTotalItems()}
-          </div>
-        )}
       </div>
     </div>
   );

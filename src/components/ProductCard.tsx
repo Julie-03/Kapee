@@ -1,13 +1,14 @@
 // src/components/ProductCard.tsx
 import React, { useContext } from 'react';
-import { CartContext } from './CartContext';
+import { CartContext } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from './services/apiService';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import type { Product } from '../types/index';
 
 interface ProductCardProps {
     product: Product;
-    onAddToCart?: (productId: number) => void;
+    onAddToCart?: (productId: string) => void;
     onSelect?: () => void;
 }
 
@@ -15,18 +16,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onSelec
     const cartContext = useContext(CartContext);
     const { isAuthenticated, user } = useAuth();
 
-    // Simple notification function
-    const notify = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-        console.log(`${type.toUpperCase()}: ${message}`);
-        // You can replace this with react-toastify, react-hot-toast, or any notification library
-        alert(message);
-    };
-
     const handleAddToCart = async (e: React.MouseEvent) => {
         e.stopPropagation();
         
         if (!isAuthenticated) {
-            notify('Please log in to add items to cart', 'info');
+            Notify.warning('Please log in to add items to cart', {
+                position: 'right-top',
+                timeout: 3000,
+                showOnlyTheLastOne: true,
+            });
             return;
         }
 
@@ -39,10 +37,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onSelec
             
             if (onAddToCart) {
                 // Use the callback if provided (for backward compatibility)
-                onAddToCart(product.id);
+                onAddToCart(product._id);
             } else {
                 // Use mongoId for backend operations, fallback to id.toString()
-                const productIdForBackend = product.mongoId || product.id.toString();
+                const productIdForBackend = product.mongoId || product._id.toString();
                 
                 console.log(`Adding product to cart:`, {
                     productId: productIdForBackend,
@@ -64,9 +62,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onSelec
                 }
                 
                 console.log(`✅ Added ${product.name} to cart via API`);
-                notify(`${product.name} added to cart!`, 'success');
                 
-                // Show success feedback
+                // Show success notification
+                Notify.success(`${product.name} added to cart!`, {
+                    position: 'right-top',
+                    timeout: 2000,
+                    showOnlyTheLastOne: true,
+                });
+                
+                // Show success feedback on button
                 button.textContent = 'Added!';
                 button.style.backgroundColor = '#10B981'; // Green color
                 
@@ -79,7 +83,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onSelec
         } catch (error) {
             console.error('Error adding to cart:', error);
             
-            // Show error feedback
+            // Show error feedback on button
             button.textContent = 'Error!';
             button.style.backgroundColor = '#EF4444'; // Red color
             
@@ -89,19 +93,31 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onSelec
                 button.disabled = false;
             }, 2000);
             
-            // Handle specific error cases
+            // Handle specific error cases with Notiflix
             if (error instanceof Error) {
-                if (error.message.includes('Authentication required')) {
-                    notify('Your session has expired. Please log in again.', 'error');
+                if (error.message.includes('Authentication required') || error.message.includes('Authorization required')) {
+                    Notify.failure('Your session has expired. Please log in again.', {
+                        position: 'right-top',
+                        timeout: 3000,
+                    });
                     // Optionally redirect to login
-                    // window.location.href = '/login';
+                    // setTimeout(() => window.location.href = '/login', 1500);
                 } else if (error.message.includes('already in cart')) {
-                    notify('This item is already in your cart. You can update the quantity from your cart.', 'info');
+                    Notify.info('This item is already in your cart. Update quantity from your cart.', {
+                        position: 'right-top',
+                        timeout: 3000,
+                    });
                 } else {
-                    notify('Failed to add item to cart. Please try again.', 'error');
+                    Notify.failure('Failed to add item to cart. Please try again.', {
+                        position: 'right-top',
+                        timeout: 3000,
+                    });
                 }
             } else {
-                notify('An unexpected error occurred. Please try again.', 'error');
+                Notify.failure('An unexpected error occurred. Please try again.', {
+                    position: 'right-top',
+                    timeout: 3000,
+                });
             }
         }
     };
@@ -191,7 +207,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onSelec
                     }
                 </button>
             </div>
-    </div>
+        </div>
     );
 };
 

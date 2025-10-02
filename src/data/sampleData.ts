@@ -21,8 +21,9 @@ export const heroBanner: HeroBanner = {
 
 const sampleProducts: Product[] = [
     {
-        id: 1,
+        _id: '1',
         name: 'Apple Watch Series 9',
+        title: 'Apple Watch Series 9',
         price: 299.99,
         originalPrice: 399.99,
         image: 'https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=300&h=300&fit=crop',
@@ -32,8 +33,9 @@ const sampleProducts: Product[] = [
         inStock: true
     },
     {
-        id: 2,
+        _id: '2',
         name: 'Wireless Bluetooth Speaker',
+        title: 'Wireless Bluetooth Speaker',
         price: 79.99,
         image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=300&h=300&fit=crop',
         category: 'audio',
@@ -41,8 +43,9 @@ const sampleProducts: Product[] = [
         inStock: true
     },
     {
-        id: 3,
+        _id: '3',
         name: 'Watch Charger Stand',
+        title: 'Watch Charger Stand',
         price: 29.99,
         originalPrice: 39.99,
         image: 'https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?w=300&h=300&fit=crop',
@@ -52,8 +55,9 @@ const sampleProducts: Product[] = [
         inStock: true
     },
     {
-        id: 4,
+        _id: '4',
         name: 'Premium Headphones',
+        title: 'Premium Headphones',
         price: 149.99,
         image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop',
         category: 'audio',
@@ -61,8 +65,9 @@ const sampleProducts: Product[] = [
         inStock: true
     },
     {
-        id: 5,
+        _id: '5',
         name: 'USB-C Lightning Cable',
+        title: 'USB-C Lightning Cable',
         price: 19.99,
         image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=300&fit=crop',
         category: 'accessories',
@@ -70,8 +75,9 @@ const sampleProducts: Product[] = [
         inStock: true
     },
     {
-        id: 6,
+        _id: '6',
         name: 'Wireless Earbuds Pro',
+        title: 'Wireless Earbuds Pro',
         price: 249.99,
         image: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=300&h=300&fit=crop',
         category: 'audio',
@@ -79,8 +85,9 @@ const sampleProducts: Product[] = [
         inStock: true
     },
     {
-        id: 7,
+        _id: '7',
         name: 'Smart Fitness Tracker',
+        title: 'Smart Fitness Tracker',
         price: 99.99,
         originalPrice: 129.99,
         image: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=300&h=300&fit=crop',
@@ -90,8 +97,9 @@ const sampleProducts: Product[] = [
         inStock: true
     },
     {
-        id: 8,
+        _id: '8',
         name: 'Portable Power Bank',
+        title: 'Portable Power Bank',
         price: 39.99,
         image: 'https://images.unsplash.com/photo-1609592094733-50fe0ee9c4f6?w=300&h=300&fit=crop',
         category: 'accessories',

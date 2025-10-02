@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import Header from './Header';
 import { navigationItems } from '../data/sampleData';
-import { CartContext } from './CartContext';
+import { CartContext } from '../contexts/CartContext';
 
 const Layout: React.FC = () => {
   // ✅ Use CartContext instead of local state

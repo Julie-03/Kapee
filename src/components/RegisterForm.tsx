@@ -13,12 +13,12 @@ interface FormData {
 }
 
 interface RegistrationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onOpenLogin?: () => void; // Add this prop
+  isOpen?: boolean;
+  onClose?: () => void;
+  onOpenLogin?: () => void; 
 }
 
-const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose, onOpenLogin }) => {
+const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen = true, onClose = () => {}, onOpenLogin }) => {
   const navigate = useNavigate();
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>();
   const [loading, setLoading] = useState(false);

@@ -1,14 +1,15 @@
 // src/types/index.ts
 import type { ReactNode } from 'react';
-import CustomerOrderTracking from '../components/CustomerOrderTracking';
+
 export interface Product {
-    id: number;
+    _id: string;
     mongoId?: string;
     name: string;
     title: string;
     price: number;
     originalPrice?: number;
     image: string;
+    description?: string;
     category: string;
     isOnSale?: boolean;
     rating?: number;
@@ -37,4 +38,10 @@ export interface HeroBanner {
     backgroundImage: string;
     productImage: string;
     badge?: string;
+}
+
+// Props interface for ProductSection component
+export interface ProductSectionProps {
+    section: ProductSection;
+    onAddToCart: (productId: string) => void;
 }

@@ -5,7 +5,7 @@ export interface BackendProduct {
   _id: string;
   name: string;
   price: number;
-  description: string;
+  description?: string;  // Made optional to match Product type
   imageUrl?: string;
   category?: string;
 }

@@ -14,8 +14,9 @@ export interface BackendProduct {
 
 export const adaptBackendProduct = (backendProduct: BackendProduct): Product => {
     return {
-        id: Date.now() + Math.random(), // Generate unique number ID for frontend display
-        mongoId: backendProduct._id, // Keep MongoDB ID for backend operations
+        _id: backendProduct._id, // Use MongoDB _id as string
+        mongoId: backendProduct._id,
+        title: backendProduct.name,
         name: backendProduct.name,
         price: backendProduct.price,
         description: backendProduct.description,

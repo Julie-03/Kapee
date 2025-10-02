@@ -7,7 +7,7 @@ import { heroBanner, productSections } from '../data/sampleData';
 import ProductTabs from "../components/ProductTabs";
 
 interface OutletContext {
-  handleAddToCart: (productId: number) => void;
+  handleAddToCart: (productId: string) => void;
 }
 
 const HomePage: React.FC = () => {
@@ -33,14 +33,9 @@ const HomePage: React.FC = () => {
 
       {/* Product Sections */}
       <main>
-        {productSections.map((section) => (
-          <div key={section.id} id={section.id}>
-            <ProductSection
-              section={section}
-              onAddToCart={handleAddToCart}
-            />
-          </div>
-        ))}
+        <ProductSection title="Hot Deals" />
+        <ProductSection title="New Arrivals" />
+        <ProductSection title="Best Sellers" />
       </main>
 
       {/* Product Tabs Section */}

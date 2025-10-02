@@ -6,9 +6,9 @@ import ProductSection from './components/ProductSection';
 import { navigationItems, heroBanner, productSections } from './data/sampleData';
 
 const ServicePage: React.FC = () => {
-    const [cartItems, setCartItems] = useState<number[]>([]);
+    const [cartItems, setCartItems] = useState<string[]>([]);
 
-    const handleAddToCart = (productId: number) => {
+    const handleAddToCart = (productId: string) => {
         setCartItems(prev => [...prev, productId]);
         console.log(`Product ${productId} added to cart`);
     };
@@ -39,7 +39,8 @@ const ServicePage: React.FC = () => {
                 {productSections.map((section) => (
                     <div key={section.id} id={section.id}>
                         <ProductSection
-                            section={section}
+                            title={section.title}
+                            products={section.products}
                             onAddToCart={handleAddToCart}
                         />
                     </div>

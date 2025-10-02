@@ -1,4 +1,4 @@
-// Updated LoginModal.tsx with Forgot Password integration
+// Updated LoginModal.tsx with Forgot Password integration and Cart Loading
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -6,6 +6,7 @@ import axios from "axios";
 import { Notify } from "notiflix";
 import { X, User, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext'; // ADD THIS
 import ForgotPasswordModal from './ForgotPasswordModal';
 
 interface FormData {
@@ -14,15 +15,16 @@ interface FormData {
 }
 
 interface LoginModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
   onOpenRegister?: () => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onOpenRegister }) => {
+const LoginModal: React.FC<LoginModalProps> = ({ isOpen = true, onClose = () => {}, onOpenRegister }) => {
   const navigate = useNavigate();
   const { register, handleSubmit, reset } = useForm<FormData>();
   const { login } = useAuth();
+  const { loadCart } = useCart(); // ADD THIS
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const onLogin = async (data: FormData) => {
@@ -56,6 +58,15 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onOpenRegister
 
       // Use AuthContext login function (this handles all storage)
       login(token, authUser);
+
+      // ✅ LOAD USER'S CART FROM BACKEND AFTER LOGIN
+      try {
+        await loadCart();
+        console.log('✅ Cart loaded successfully after login');
+      } catch (cartError) {
+        console.error('⚠️ Could not load cart:', cartError);
+        // Don't fail login if cart loading fails
+      }
 
       console.log("✅ User role:", userData.userRole);
       console.log("✅ Authentication complete");

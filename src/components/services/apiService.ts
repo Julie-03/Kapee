@@ -12,6 +12,22 @@ export interface BackendProduct {
   updatedAt?: string;
 }
 
+export interface CartItemResponse {
+  _id: string;
+  userId: string;
+  productId: {
+    _id: string;
+    name: string;
+    price: number;
+    imageUrl?: string;
+    description?: string;
+  };
+  quantity: number;
+  subtotal: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ContactFormData {
   name: string;
   email: string;
@@ -119,15 +135,39 @@ export const productService = {
       throw error;
     }
   },
+
+  updateProduct: async (
+    productId: string,
+    productData: Partial<Omit<BackendProduct, "_id" | "createdAt" | "updatedAt">>
+  ): Promise<BackendProduct> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(productData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error updating product:", error);
+      throw error;
+    }
+  },
 };
 
 // Contact service
 export const contactService = {
   submitContact: async (data: ContactFormData): Promise<ContactResponse> => {
     try {
-      console.log("Submitting contact form to:", `${API_BASE_URL}/api_v1/contacts`);
+      console.log("Submitting contact form to:", `${API_BASE_URL}/api_v1/contact`);
 
-      const response = await fetch(`${API_BASE_URL}/api_v1/contacts`, {
+      const response = await fetch(`${API_BASE_URL}/api_v1/contact`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -151,9 +191,7 @@ export const contactService = {
 };
 
 // Password Reset service
-export const passwordResetService = {
-  // Send OTP to email
-  sendOTP: async (data: SendOTPRequest): Promise<SendOTPResponse> => {
+export const passwordResetService = {  sendOTP: async (data: SendOTPRequest): Promise<SendOTPResponse> => {
     try {
       console.log("Sending OTP to:", `${API_BASE_URL}/api_v1/user/send-otp`);
 
@@ -179,8 +217,7 @@ export const passwordResetService = {
     }
   },
 
-  // Reset password with OTP
-  resetPassword: async (data: ResetPasswordRequest): Promise<ResetPasswordResponse> => {
+ resetPassword: async (data: ResetPasswordRequest): Promise<ResetPasswordResponse> => {
     try {
       console.log("Resetting password:", `${API_BASE_URL}/api_v1/user/reset-password`);
 
@@ -207,8 +244,9 @@ export const passwordResetService = {
   },
 };
 
-// Main API service (for cart and other operations)
+// Main API service (for cart and order operations)
 const apiService = {
+  // Add item to cart
   addToCart: async (productId: string, quantity: number) => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
@@ -226,13 +264,138 @@ const apiService = {
 
     if (!response.ok) {
       if (response.status === 401) {
-        throw new Error("Authentication required");
+        throw new Error("Authorization required");
       }
-      const errorText = await response.text();
-      throw new Error(`Failed to add to cart: ${errorText}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to add to cart");
+    }
+
+    return response.json();
+  },
+
+  // Get all cart items
+  getCartItems: async (): Promise<{ success: boolean; data: CartItemResponse[] }> => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/cart`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Authorization required");
+      }
+      throw new Error("Failed to fetch cart items");
+    }
+
+    return response.json();
+  },
+
+  // Update cart item quantity
+  updateCartItem: async (productId: string, quantity: number) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/cart/update/${productId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ quantity }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Authorization required");
+      }
+      throw new Error("Failed to update cart item");
+    }
+
+    return response.json();
+  },
+
+  // Remove single item from cart
+  removeFromCart: async (productId: string) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/cart/remove/${productId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Authorization required");
+      }
+      throw new Error("Failed to remove item from cart");
+    }
+
+    return response.json();
+  },
+
+  // Clear entire cart
+  clearCart: async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/cart/clear`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Authorization required");
+      }
+      throw new Error("Failed to clear cart");
+    }
+
+    return response.json();
+  },
+
+  // Create order from cart
+  createOrder: async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/order`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Authorization required");
+      }
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to create order");
     }
 
     return response.json();
   },
 };
+
 export default apiService;
