@@ -1,4 +1,4 @@
-// AuthContext.tsx - Updated logout function
+// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
@@ -11,7 +11,7 @@ interface User {
 }
 
 interface AuthContextType {
- isAuthenticated: boolean;
+  isAuthenticated: boolean;
   user: User | null;
   login: (token: string, userData: User) => void;
   logout: () => void;
@@ -19,6 +19,9 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Create a custom event for auth changes
+export const AUTH_CHANGE_EVENT = 'auth-state-changed';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -48,6 +51,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             username: userData.username
           });
           setIsAuthenticated(true);
+          
+          // Dispatch event for cart to load
+          window.dispatchEvent(new CustomEvent(AUTH_CHANGE_EVENT, { 
+            detail: { isAuthenticated: true, action: 'restore' } 
+          }));
         } else {
           console.log('❌ AuthContext: No valid session found');
         }
@@ -82,10 +90,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsAuthenticated(true);
     
     console.log('✅ AuthContext: Login complete, isAuthenticated:', true);
+    
+    // Dispatch custom event to notify cart to load
+    window.dispatchEvent(new CustomEvent(AUTH_CHANGE_EVENT, { 
+      detail: { isAuthenticated: true, action: 'login' } 
+    }));
   };
 
   const logout = () => {
     console.log('🔄 AuthContext: Logout called');
+    
+    // Dispatch logout event BEFORE clearing storage (so cart can read token if needed)
+    window.dispatchEvent(new CustomEvent(AUTH_CHANGE_EVENT, { 
+      detail: { isAuthenticated: false, action: 'logout' } 
+    }));
     
     // Clear all authentication data
     localStorage.removeItem('accessToken');
@@ -109,18 +127,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     logout,
     loading
   };
-
-  // Debug logging in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 AuthContext state:', { 
-      isAuthenticated, 
-      userEmail: user?.email,
-      userRole: user?.role || user?.userRole,
-      loading 
-    });
-  }
-
-  return (
+return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>

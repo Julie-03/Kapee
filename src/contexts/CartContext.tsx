@@ -1,8 +1,9 @@
-// src/context/CartContext.tsx
+// src/contexts/CartContext.tsx
 import React, { createContext, useState, useContext, useEffect } from "react";
 import apiService from "../components/services/apiService";
 import { Notify } from "notiflix/build/notiflix-notify-aio";
 import type { ReactNode } from "react";
+import { AUTH_CHANGE_EVENT } from "./AuthContext";
 
 interface CartItem {
   id: string;
@@ -28,7 +29,7 @@ export const CartContext = createContext<CartContextType | null>(null);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // Load cart from backend when component mounts or user logs in
+  // Load cart from backend
   const loadCart = async () => {
     try {
       const token = localStorage.getItem("accessToken");
@@ -59,9 +60,34 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Load cart when component mounts
+  // Listen for authentication state changes
   useEffect(() => {
+    const handleAuthChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { isAuthenticated, action } = customEvent.detail;
+      
+      console.log('🔔 Cart received auth event:', action, 'isAuthenticated:', isAuthenticated);
+      
+      if (isAuthenticated && (action === 'login' || action === 'restore')) {
+        // User logged in or session restored - load cart from backend
+        console.log('📥 Loading cart from backend after', action);
+        loadCart();
+      } else if (!isAuthenticated && action === 'logout') {
+        // User logged out - clear cart from UI (backend keeps it)
+        console.log('🗑️ Clearing cart from UI after logout');
+        setItems([]);
+      }
+    };
+
+    // Listen for custom auth events
+    window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+
+    // Initial load on mount
     loadCart();
+
+    return () => {
+      window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+    };
   }, []);
 
   const addItem = async (item: Omit<CartItem, "qty">, qty = 1) => {

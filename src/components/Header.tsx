@@ -1,4 +1,4 @@
-// src/components/Header.tsx
+// src/components/Header.tsx - COMPLETE UPDATED VERSION
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { NavItem } from '../types/index';
@@ -10,10 +10,9 @@ import CartModal from './CartModal';
 
 interface HeaderProps {
   navigationItems: NavItem[];
-  cartItemCount?: number;
 }
 
-const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) => {
+const Header: React.FC<HeaderProps> = ({ navigationItems }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -23,8 +22,13 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
   
   // Get authentication state
   const { isAuthenticated, user, logout } = useAuth();
-  const { clearCart } = useCart();
+  // Get cart state directly from CartContext
+  const { getTotalItems } = useCart();
+  const isAdmin = user?.role === 'admin' || user?.userRole === 'admin';
   const navigate = useNavigate();
+
+  // Get live cart count
+  const cartItemCount = getTotalItems();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,17 +42,21 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      // DON'T clear cart - let it persist in backend
-      // Just clear local state
-      console.log('⚠️ Logging out - cart will remain in backend');
-    } catch (error) {
-      console.log('⚠️ Logout error:', error);
-    } finally {
-      // Remove the auth token and logout
+      console.log('Logging out user...');
+      
+      // The cart will be automatically cleared from UI by CartContext
+      // when it receives the logout event from AuthContext
+      // Backend cart remains saved
+      
+      // Just call logout - AuthContext will handle everything
       logout();
       navigate('/');
+      
+      console.log('User logged out successfully - cart saved in database');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
       setIsLoggingOut(false);
-      console.log('✅ User logged out successfully');
     }
   };
 
@@ -80,7 +88,7 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
       <header className="bg-white shadow-md">
         <div className="bg-yellow-500 text-black py-2">
           <div className="max-w-7xl mx-auto px-4 text-center">
-            <p className="text-sm font-medium">Free shipping on orders over $50! 📦</p>
+            <p className="text-sm font-medium">Free shipping on orders over $50!</p>
           </div>
         </div>
 
@@ -115,7 +123,7 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
                   onClick={handleAccountClick}
                   className="bg-white shadow hidden sm:flex items-center space-x-1 text-gray-700 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                 >  
-                  <span className="text-sm">Login</span>
+                  <span className="text-sm ">Login</span>
                 </button>
               )}
 
@@ -162,11 +170,11 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for products..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              placeholder="Search for products..."
               />
               <button type="submit" className="px-4 py-2 bg-yellow-500 text-white rounded-r-lg hover:bg-yellow-600">
-                🔍
+                <p> Search</p>
               </button>
             </form>
           </div>
@@ -211,7 +219,7 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
                           setIsMobileMenuOpen(false);
                           handleAccountClick();
                         }}
-                        className="block py-2 text-gray-700 hover:text-yellow-600 transition-colors duration-200"
+                        className="block py-2 text-black bg-yellow-500 hover:text-yellow-600 transition-colors duration-200"
                       >
                         Login
                       </button>
@@ -226,7 +234,7 @@ const Header: React.FC<HeaderProps> = ({ navigationItems, cartItemCount = 0 }) =
                             handleLogout();
                           }}
                           disabled={isLoggingOut}
-                          className="block py-2 text-red-600 hover:text-red-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="block py-2 text-black bg-yellow-500 hover:yellow-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isLoggingOut ? 'Logging out...' : 'Logout'}
                         </button>

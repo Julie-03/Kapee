@@ -1,6 +1,11 @@
-// src/components/HeroSection.tsx
 import React from 'react';
-import type { HeroBanner } from '../types/index';
+
+interface HeroBanner {
+    badge?: string;
+    title: string;
+    subtitle: string;
+    buttonText: string;
+}
 
 interface HeroSectionProps {
     banner: HeroBanner;
@@ -16,7 +21,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ banner, onShopNow }) => {
         }
     };
 
-    // Sidebar categories data 
     const sidebarCategories = [
         { id: 1, name: "Laptops", hasSubmenu: true },
         { id: 2, name: "Watches", hasSubmenu: true },
@@ -29,9 +33,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ banner, onShopNow }) => {
 
     return (
         <section className="bg-gray-100 w-full">
-            <div className="flex w-full min-h-[600px]">
-                {/* Sidebar - Only visible on hero section */}
-                <aside className="w-64 bg-white flex-shrink-0">
+            <div className="flex flex-col lg:flex-row w-full min-h-[400px] md:min-h-[500px] lg:min-h-[600px]">
+                {/* Sidebar - Hidden on mobile/tablet, visible on large screens */}
+                <aside className="hidden lg:block lg:w-64 bg-white flex-shrink-0">
                     <div className="p-4 h-full">
                         <h3 className="font-bold text-black mb-4 text-lg uppercase tracking-wide">SHOP BY CATEGORIES</h3>
                         <nav>
@@ -55,29 +59,29 @@ const HeroSection: React.FC<HeroSectionProps> = ({ banner, onShopNow }) => {
                 </aside>
 
                 {/* Main Hero Content */}
-                <div className="flex-1 py-12 px-4">
+                <div className="flex-1 py-8 md:py-12 px-4 md:px-6">
                     <div className="max-w-5xl mx-auto">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
                             {/* Left content */}
-                            <div className="flex-1">
-                                <div className="mb-6">
-                                    <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
+                            <div className="flex-1 text-center lg:text-left">
+                                <div className="mb-4 md:mb-6">
+                                    <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-xs md:text-sm font-bold">
                                         {banner.badge || 'BEATS EP ON-EAR'}
                                     </span>
                                 </div>
                                 
-                                <h1 className="text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                                <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-4 md:mb-6 leading-tight">
                                     PERSONALIZED<br />
                                     HEADPHONES
                                 </h1>
                                 
-                                <p className="text-xl text-gray-600 mb-8">
+                                <p className="text-base md:text-lg lg:text-xl text-gray-600 mb-6 md:mb-8 max-w-md mx-auto lg:mx-0">
                                     {banner.subtitle}
                                 </p>
                                 
                                 <button
                                     onClick={handleShopNow}
-                                    className="bg-yellow-400 text-black font-bold py-4 px-8 rounded hover:bg-yellow-500 transition-colors"
+                                    className="bg-yellow-400 text-black font-bold py-3 px-6 md:py-4 md:px-8 rounded hover:bg-yellow-500 transition-colors text-sm md:text-base"
                                 >
                                     {banner.buttonText}
                                 </button>
@@ -85,22 +89,22 @@ const HeroSection: React.FC<HeroSectionProps> = ({ banner, onShopNow }) => {
 
                             {/* Right content - Headphones image */}
                             <div className="flex-1 flex justify-center">
-                                <div className="relative">
+                                <div className="relative w-full max-w-sm lg:max-w-md">
                                     <img
-                                        src="/src/assets/headphones.jpg"
+                                        src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=400&fit=crop"
                                         alt={banner.title}
-                                        className="w-96 h-80 object-contain"
+                                        className="w-full h-64 md:h-80 lg:h-96 object-contain"
                                     />
                                 </div>
                             </div>
                         </div>
                         
                         {/* Navigation arrows */}
-                        <div className="flex justify-center mt-8 space-x-4">
-                            <button className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-gray-50">
+                        <div className="flex justify-center mt-6 md:mt-8 space-x-4">
+                            <button className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-gray-50 text-lg md:text-xl">
                                 ←
                             </button>
-                            <button className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-gray-50">
+                            <button className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-gray-50 text-lg md:text-xl">
                                 →
                             </button>
                         </div>
@@ -111,4 +115,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({ banner, onShopNow }) => {
     );
 };
 
-export default HeroSection;
+// Demo with sample data
+export default function App() {
+    const sampleBanner: HeroBanner = {
+        badge: 'BEATS EP ON-EAR',
+        title: 'PERSONALIZED HEADPHONES',
+        subtitle: 'Experience crystal-clear sound with our premium wireless headphones',
+        buttonText: 'SHOP NOW'
+    };
+
+    return <HeroSection banner={sampleBanner} onShopNow={() => alert('Shop now clicked!')} />;
+}
